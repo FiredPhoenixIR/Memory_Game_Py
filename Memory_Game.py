@@ -1,60 +1,61 @@
 import random
+import time
 
-def initialize_board(size):
-    symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    num_pairs = size * size // 2
-    pairs = random.sample(symbols, num_pairs)
-    board = pairs + pairs
-    random.shuffle(board)
-    return [board[i:i+size] for i in range(0, len(board), size)]
+def generate_cards(num_pairs):
+    icons = ["A", "B", "C", "D", "E", "F", "G", "H"]
+    cards = icons * num_pairs
+    random.shuffle(cards)
+    return cards
 
-def display_board(board, revealed):
-    for i in range(len(board)):
-        for j in range(len(board[i])):
-            if revealed[i][j]:
-                print(board[i][j], end=' ')
-            else:
-                print('?', end=' ')
-        print()
-
-def is_game_over(revealed):
-    for row in revealed:
-        if False in row:
-            return False
-    return True
+def display_board(board):
+    for row in board:
+        print(" ".join(row))
 
 def main():
-    size = 4  # Adjust this for different board sizes (e.g., 4x4, 6x6, etc.)
-    board = initialize_board(size)
-    revealed = [[False] * size for _ in range(size)]
+    num_pairs = 4  # Number of pairs of cards
+    cards = generate_cards(num_pairs)
+    board_size = (4, num_pairs * 2)
+    board = [["#" for _ in range(board_size[1])] for _ in range(board_size[0])]
+    
+    matched_pairs = 0
     moves = 0
+    start_time = time.time()
 
-    while not is_game_over(revealed):
-        print("\n--- Memory Game ---")
-        display_board(board, revealed)
-        print("\nEnter row and column to reveal a card (e.g., '1 2'): ")
+    while matched_pairs < num_pairs:
+        display_board(board)
+        print(f"Moves: {moves}")
+        print(f"Time Elapsed: {int(time.time() - start_time)} seconds\n")
         
         try:
-            row, col = map(int, input().split())
-            if 1 <= row <= size and 1 <= col <= size and not revealed[row-1][col-1]:
-                revealed[row-1][col-1] = True
-            else:
-                print("Invalid move. Try again.")
-                continue
+            choice1 = tuple(map(int, input("Enter the row and column of the first card (e.g., 1 2): ").split()))
+            choice2 = tuple(map(int, input("Enter the row and column of the second card (e.g., 2 3): ").split()))
         except ValueError:
-            print("Invalid input. Enter row and column as integers.")
+            print("Invalid input. Please enter row and column as integers.")
             continue
-
-        if moves % 2 == 1:
-            if board[row-1][col-1] != board[prev_row-1][prev_col-1]:
-                revealed[row-1][col-1] = False
-                revealed[prev_row-1][prev_col-1] = False
+        
+        if (
+            choice1 != choice2 and
+            0 <= choice1[0] < board_size[0] and 0 <= choice1[1] < board_size[1] and
+            0 <= choice2[0] < board_size[0] and 0 <= choice2[1] < board_size[1]
+        ):
+            card1 = board[choice1[0]][choice1[1]]
+            card2 = board[choice2[0]][choice2[1]]
+            
+            if card1 == card2 and card1 != "#":
+                print("Match!")
+                board[choice1[0]][choice1[1]] = card1
+                board[choice2[0]][choice2[1]] = card2
+                matched_pairs += 1
+            else:
+                print("No match. Try again.")
+            
+            moves += 1
         else:
-            prev_row, prev_col = row, col
-
-        moves += 1
-
-    print("Congratulations! You won in", moves, "moves.")
+            print("Invalid choice. Please choose valid cards.")
+    
+    end_time = time.time()
+    elapsed_time = int(end_time - start_time)
+    print(f"Congratulations! You completed the game in {moves} moves and {elapsed_time} seconds.")
 
 if __name__ == "__main__":
     main()
